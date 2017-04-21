@@ -45,7 +45,6 @@ class Exciton_sim : public Simulation{
         bool checkFinished();
         bool executeNextEvent();
         int getN_excitons_created();
-        double getSiteEnergy(const Coords& coords);
     protected:
         vector<Site_OSC> sites;
         list<Exciton> excitons;
@@ -78,8 +77,13 @@ class Exciton_sim : public Simulation{
         int N_excitons_created;
         int N_excitons;
         // Additional Functions
-        void calculateExcitonCreationEvent();
+        Coords calculateExcitonCreationCoords();
         void calculateExcitonEvents(const list<Exciton>::iterator object_it);
+        bool executeExcitonCreation(const list<unique_ptr<Event>>::iterator event_it);
+        bool executeExcitonHop(const list<unique_ptr<Event>>::iterator event_it);
+        bool executeExcitonRecombine(const list<unique_ptr<Event>>::iterator event_it);
+        list<Exciton>::iterator getExcitonIt(unique_ptr<Object>& object_ptr);
+        double getSiteEnergy(const Coords& coords);
 };
 
 #endif // EXCITON_SIM_H

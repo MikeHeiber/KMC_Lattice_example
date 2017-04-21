@@ -10,6 +10,9 @@ Exciton_sim::Exciton_sim(const Parameters_Exciton_Sim& params,const int id){
     Exciton_lifetime = params.Exciton_lifetime;
     R_exciton_hopping = params.R_exciton_hopping;
     FRET_cutoff = params.FRET_cutoff;
+    Exciton::R_hop = R_exciton_hopping;
+    Exciton::lifetime = Exciton_lifetime;
+    Exciton::FRET_cutoff = FRET_cutoff;
     // Test Parameters
     Enable_diffusion_test = params.Enable_diffusion_test;
     N_tests = params.N_tests;
@@ -35,7 +38,7 @@ Exciton_sim::Exciton_sim(const Parameters_Exciton_Sim& params,const int id){
     // Initialize sites
     sites.clear();
     Site_OSC site;
-    for(int i=0;i<lattice.size();i++){
+    for(int i=0;i<getNumSites();i++){
         if(Enable_gaussian_dos || Enable_exponential_dos){
             site.setEnergyIt(site_energies.begin()+i);
         }
@@ -43,12 +46,14 @@ Exciton_sim::Exciton_sim(const Parameters_Exciton_Sim& params,const int id){
             site.setEnergyIt(site_energies.begin());
         }
         sites.push_back(site);
-        lattice.push_back(unique_ptr<Site>(&sites.back()));
+        unique_ptr<Site> site_ptr = unique_ptr<Site>(&sites.back());
+        addSite(site_ptr);
     }
     // Initialize exciton creation event
-    calculateExcitonCreationEvent();
-    events.push_back(unique_ptr<Event>(&exciton_creation_event));
-    exciton_creation_it = --events.end();
+    Coords dest_coords;
+    exciton_creation_event.calculateEvent(dest_coords,0,0,getTemperature(),Exciton_generation_rate);
+    unique_ptr<Event> event_ptr = unique_ptr<Event>(&exciton_creation_event);
+    exciton_creation_it = addEvent(event_ptr);
 }
 
 double Exciton_sim::calculateDiffusionLength_avg(){
@@ -59,8 +64,24 @@ double Exciton_sim::calculateDiffusionLength_stdev(){
     return vector_stdev(diffusion_distances);
 }
 
-void Exciton_sim::calculateExcitonCreationEvent(){
-    exciton_creation_event.calculateEvent(Exciton_generation_rate);
+Coords Exciton_sim::calculateExcitonCreationCoords(){
+    Coords dest_coords;
+    bool success = false;
+    while(!success){
+        dest_coords = getRandomCoords();
+        if(loggingEnabled()){
+            stringstream msg;
+            msg << "Attempting to create exciton at " << dest_coords.x << "," << dest_coords.y << "," << dest_coords.z << "." << endl;
+            logMSG(msg);
+        }
+        if(isOccupied(dest_coords)){
+            continue;
+        }
+        else{
+            success = true;
+            return dest_coords;
+        }
+    }
 }
 
 void Exciton_sim::calculateExcitonEvents(const list<Exciton>::iterator exciton_it){
@@ -81,7 +102,7 @@ void Exciton_sim::calculateExcitonEvents(const list<Exciton>::iterator exciton_i
                 distance = getUnitSize()*sqrt((double)(i*i+j*j+k*k));
                 if(!(*getSiteIt(dest_coords))->isOccupied() && !distance>FRET_cutoff){
                     E_delta = getSiteEnergy(dest_coords)-getSiteEnergy(object_coords);
-                    event_hop.calculateEvent(dest_coords,distance,E_delta,getTemperature());
+                    event_hop.calculateEvent(dest_coords,distance,E_delta,getTemperature(),0);
                     hops_temp[i*range*range+j*range+k] = event_hop;
                     hops_valid[i*range*range+j*range+k] = true;
                 }
@@ -93,7 +114,7 @@ void Exciton_sim::calculateExcitonEvents(const list<Exciton>::iterator exciton_i
     }
     // Exciton Recombination
     Exciton_Recombine event_recombine;
-    event_recombine.calculateEvent();
+    event_recombine.calculateEvent(object_coords,0,0,0,0);
     // Determine the fastest available hop event
     vector<Exciton_Hop>::iterator hop_it;
     vector<Exciton_Hop>::iterator hop_target_it = hops_temp.end();
@@ -121,9 +142,65 @@ bool Exciton_sim::checkFinished(){
     }
 }
 
-bool Exciton_sim::executeNextEvent(){
-    (*chooseNextEvent())->executeEvent();
+bool Exciton_sim::executeExcitonCreation(const list<unique_ptr<Event>>::iterator event_it){
+    incrementTime((*event_it)->getWaitTime());
+    Coords coords_new = calculateExcitonCreationCoords();
+    Exciton exciton_new(getTime(),N_excitons_created+1,coords_new);
+    excitons.push_back(exciton_new);
+    unique_ptr<Object> object_ptr = unique_ptr<Object>(&excitons.back());
+    addObject(object_ptr);
+    N_excitons_created++;
+    N_excitons++;
+    calculateExcitonEvents(--excitons.end());
+    return true;
+}
 
+bool Exciton_sim::executeExcitonHop(const list<unique_ptr<Event>>::iterator event_it){
+    if(isOccupied((*event_it)->getDestCoords())){
+        cout << "Exciton hop cannot be executed. Destination site is already occupied." << endl;
+        return false;
+    }
+    else{
+        incrementTime((*event_it)->getWaitTime());
+        moveObject((*event_it)->getObjectIt(),(*event_it)->getDestCoords());
+        calculateExcitonEvents(getExcitonIt(*((*event_it)->getObjectIt())));
+        return true;
+    }
+}
+
+bool Exciton_sim::executeExcitonRecombine(const list<unique_ptr<Event>>::iterator event_it){
+    incrementTime((*event_it)->getWaitTime());
+    deleteExciton((*event_it)->getObjectIt());
+    removeObject((*event_it)->getObjectIt());
+    N_excitons--;
+    return true;
+}
+
+bool Exciton_sim::executeNextEvent(){
+    list<unique_ptr<Event>>::iterator event_it = chooseNextEvent();
+    string event_name = (*event_it)->getName();
+    if(event_name.compare("Exciton Creation")){
+        return executeExcitonCreation(event_it);
+    }
+    else if(event_name.compare("Exciton Hop")){
+        return executeExcitonHop(event_it);
+    }
+    else if(event_name.compare("Exciton Recombine")){
+        return executeExcitonRecombine(event_it);
+    }
+    else{
+        //error
+        return false;
+    }
+}
+
+list<Exciton>::iterator Exciton_sim::getExcitonIt(unique_ptr<Object>& object_ptr){
+    list<Exciton>::iterator exciton_it;
+    for(exciton_it=excitons.begin();exciton_it!=excitons.end();++exciton_it){
+        if(object_ptr->getTag()==exciton_it->getTag()){
+            return exciton_it;
+        }
+    }
 }
 
 int Exciton_sim::getN_excitons_created(){
