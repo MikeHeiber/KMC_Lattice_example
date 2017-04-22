@@ -31,7 +31,7 @@ struct Parameters_Exciton_Sim : Parameters_Simulation{
 class Site_OSC : public Site{
     public:
         void setEnergyIt(const vector<float>::iterator it){energy_it = it;}
-        double getEnergy(){return *energy_it;}
+        float getEnergy(){return *energy_it;}
     private:
         vector<float>::iterator energy_it;
 };
@@ -78,12 +78,13 @@ class Exciton_sim : public Simulation{
         int N_excitons;
         // Additional Functions
         Coords calculateExcitonCreationCoords();
-        void calculateExcitonEvents(const list<Exciton>::iterator object_it);
+        void calculateExcitonEvents(const list<unique_ptr<Object>>::iterator object_it);
+        void deleteExciton(const list<Exciton>::iterator exciton_it);
         bool executeExcitonCreation(const list<unique_ptr<Event>>::iterator event_it);
         bool executeExcitonHop(const list<unique_ptr<Event>>::iterator event_it);
         bool executeExcitonRecombine(const list<unique_ptr<Event>>::iterator event_it);
-        list<Exciton>::iterator getExcitonIt(unique_ptr<Object>& object_ptr);
-        double getSiteEnergy(const Coords& coords);
+        list<Exciton>::iterator getExcitonIt(const unique_ptr<Object>& object_ptr);
+        float getSiteEnergy(const Coords& coords);
 };
 
 #endif // EXCITON_SIM_H

@@ -97,9 +97,9 @@ int main(int argc,char *argv[]){
         if(params_sim.Enable_logging){
             //sim.outputStatus(&logfile);
             //sim.outputEventQueue(5,&logfile);
-            if(sim.getN_events_executed()%2000==0){
-                //logfile.close();
-                //logfile.open(logfilename.c_str());
+            if(sim.getN_events_executed()%100==0){
+                logfile.close();
+                logfile.open(logfilename.c_str());
             }
         }
     }

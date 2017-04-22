@@ -23,39 +23,42 @@ class Exciton : public Object{
 
 class Exciton_Creation : public Event{
     public:
+        static const string name;
         void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
             setDestCoords(dest_coords);
             // No target object
-            setWaitTime(-1*prefactor*log(rand01()));
+            setWaitTime((-1/prefactor)*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
+
 
 };
 
 class Exciton_Hop : public Event{
     public:
+        static const string name;
         void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
             setDestCoords(dest_coords);
             // No target object
-            setWaitTime((-1/(Exciton::R_hop*intpow(1/distance,6)*exp(-E_delta/(K_b*temperature))))*log(rand01()));
+            setWaitTime((-1/(Exciton::R_hop*intpow(1/(float)distance,6)*exp(-(float)E_delta/(K_b*temperature))))*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
+
 };
 
 class Exciton_Recombine : public Event{
     public:
+        static const string name;
         void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
             setDestCoords(dest_coords);
             // No target object
-            setWaitTime(-1*Exciton::lifetime*log(rand01()));
+            setWaitTime(-1*Exciton::lifetime*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
+
 };
 
 #endif // EXCITON_H
