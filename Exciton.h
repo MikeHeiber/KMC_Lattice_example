@@ -1,9 +1,9 @@
 #ifndef EXCITON_H
 #define EXCITON_H
 
-#include "Utils.h"
-#include "Object.h"
-#include "Event.h"
+#include "KMC_Lattice/Utils.h"
+#include "KMC_Lattice/Object.h"
+#include "KMC_Lattice/Event.h"
 #include <string>
 
 using namespace std;
@@ -25,7 +25,7 @@ class Exciton_Creation : public Event{
     public:
         static const string name;
         void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
-            setDestCoords(dest_coords);
+            // No destination coords.  Destination coords are chosen upon execution.
             // No target object
             setWaitTime((-1/prefactor)*log((float)rand01()));
         }

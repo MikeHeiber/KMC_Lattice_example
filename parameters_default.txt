@@ -1,10 +1,10 @@
-## Parameters for KMC_Lattice_example v0.1-alpha
+## Parameters for KMC_Lattice_example v1.0
 ----------------------------------------
 ## Computation Parameters
 true //Enable_mpi
 ----------------------------------------
 ## Required Simulation Parameters
-true //Enable_logging
+false //Enable_logging
 true //Enable_periodic_x
 true //Enable_periodic_y
 true //Enable_periodic_z
@@ -13,16 +13,15 @@ true //Enable_periodic_z
 50 //Height
 1.0 //Unit_size (nm)
 300 //Temperature (K)
-true //Enable_recalc
-5 //Recalc_cutoff (nm)
+4 //Recalc_cutoff (nm) (must not be less than the FRET_cutoff)
 ----------------------------------------
 ## Test Parameters
 true //Enable_diffusion_test
 1000 //N_tests
 ----------------------------------------
 ## Exciton Parameters
-1e21 //Exciton_generation_rate
-500e-6 //Exciton_lifetime (s)
+1e22 //Exciton_generation_rate (cm^-3)
+500e-12 //Exciton_lifetime (s)
 1e12 //R_exciton_hopping (s^-1)
 4 //FRET_cutoff (nm)
 ----------------------------------------
