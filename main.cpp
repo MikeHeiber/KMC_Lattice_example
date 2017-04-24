@@ -1,12 +1,9 @@
-#include "Utils.h"
+#include "KMC_Lattice/Utils.h"
 #include "Exciton_sim.h"
 #include "mpi.h"
 #include <fstream>
 #include <string>
 #include <vector>
-//#include <iostream>
-//#include <sstream>
-//#include <cmath>
 
 using namespace std;
 
@@ -18,14 +15,14 @@ struct Parameters_main{
 bool importParameters(ifstream * inputfile,Parameters_main& params_main,Parameters_Exciton_Sim& params);
 
 int main(int argc,char *argv[]){
-    string version = "v0.1-alpha";
+    string version = "v1.0";
     // Parameters
     bool End_sim = false;
     // File declaration
     ifstream parameterfile;
-    ofstream resultsfile;
     ofstream logfile;
-    ofstream outputfile;
+    ofstream resultsfile;
+    ofstream analysisfile;
     stringstream ss;
     // Initialize variables
     string parameterfilename;
@@ -35,13 +32,12 @@ int main(int argc,char *argv[]){
     int nproc = 1;
     int procid = 0;
     int elapsedtime;
-    time_t start, end;
-    bool eventResult;
+    time_t time_start,time_end;
     bool success;
     // Start timer
-    start = time(NULL);
+    time_start = time(NULL);
     // Import parameters and options from file and command line arguments
-    cout << "Loading input parameters from file... ";
+    cout << "Loading input parameters from file... " << endl;
     parameterfilename = argv[1];
     parameterfile.open(parameterfilename.c_str(),ifstream::in);
     if(!parameterfile){
@@ -71,137 +67,72 @@ int main(int argc,char *argv[]){
         logfile.open(ss.str().c_str());
         ss.str("");
     }
-    ss << "output" << procid << ".txt";
-    outputfile.open(ss.str().c_str());
-    ss.str("");
-    // Add file input and output information to input parameters
     params_sim.Logfile = &logfile;
     // Initialize Simulation
     cout << procid << ": Initializing simulation " << procid << "..." << endl;
     Exciton_sim sim(params_sim,procid);
     cout << procid << ": Simulation initialization complete" << endl;
-    // Output initial status
-    if(params_sim.Enable_logging){
-        //sim.outputStatus(&logfile);
-    }
     // Begin Simulation loop
     while(!End_sim){
-        eventResult = sim.executeNextEvent();
-        if(!eventResult){
+        success = sim.executeNextEvent();
+        if(!success){
             cout << procid << ": Event execution failed, simulation will now terminate." << endl;
             break;
         }
         // Check if simulation has finished
         End_sim = sim.checkFinished();
         // Output status
+        if(sim.getN_events_executed()%10000==0){
+            sim.outputStatus();
+        }
+        // Reset logfile
         if(params_sim.Enable_logging){
-            //sim.outputStatus(&logfile);
-            //sim.outputEventQueue(5,&logfile);
-            if(sim.getN_events_executed()%2000==0){
+            if(sim.getN_events_executed()%10000==0){
                 logfile.close();
                 logfile.open(logfilename.c_str());
             }
         }
     }
-    // Calculate final statistics
-    cout << procid << ": Simulation finished." << endl;
-    end = time(NULL);
-    elapsedtime = difftime(end,start);
-    // Output calculation parameters
-    double exciton_diffusion_avg = 0;
-    double exciton_diffusion_stdev = 0;
-    if(params_sim.Enable_diffusion_test){
-        exciton_diffusion_avg = sim.calculateDiffusionLength_avg();
-        exciton_diffusion_stdev = sim.calculateDiffusionLength_stdev();
-    }
-    ss << "results" << procid << ".txt";
-    resultsfile.open(ss.str().c_str());
-    ss.str("");
-    resultsfile << "KMC_Lattice " << version << ":\n";
-    resultsfile << "Simulation on processor " << procid << " finished.\n";
-    resultsfile << "Calculation time elapsed is " << (double)elapsedtime/60 << " minutes.\n";
-    resultsfile << sim.getTime() << " seconds have been simulated.\n";
-    resultsfile << sim.getN_events_executed() << " events have been executed.\n";
-    resultsfile << sim.getN_excitons_created() << " objects have been created.\n";
-    if(params_sim.Enable_diffusion_test){
-        resultsfile << "Exciton diffusion test results:\n";
-        resultsfile << "Effective Exciton Diffusion Length is " << exciton_diffusion_avg << " ± " << exciton_diffusion_stdev << " nm\n";
-    }
-    resultsfile << endl;
-//    if(Enable_mpi){
-//        if(params.Enable_diffusion_test){
-//            // Generate Results from Polaron log
-//            if(procid==0){
-//                cout << "Analyzing diffusion log files." << endl;
-//            }
-//            int N = (12+log10(params.Time_cutoff))*20;
-//            int array_size = N+1;
-//            double* exciton_displacement_data;
-//            double* exciton_energy_data;
-//            int* exciton_count_data;
-//            double* time_data = (double*)malloc(sizeof(double)*array_size);
-//            exciton_displacement_data = (double*)malloc(sizeof(double)*array_size);
-//            exciton_energy_data = (double*)malloc(sizeof(double)*array_size);
-//            exciton_count_data = (int*)malloc(sizeof(int)*array_size);
-//            vector<double> times_temp;
-//            vector<double> displacements_temp;
-//            vector<double> energies_temp;
-//            string line,var;
-//            int n,tag,type,tag_target,type_target;
-//            double time,displacement,energy;
-//            bool first_loop;
-//            // Load diffusion log file for one proc at a time
-//            for(int i=0;i<nproc;i++){
-//                MPI_Barrier(MPI_COMM_WORLD);
-//                if(i==procid){
-//                    first_loop = true;
-//                    for(int i=0;i<=N;i++){
-//                        time_data[i] = pow(10,(0.05*i-12));
-//                        exciton_displacement_data[i] = 0;
-//                        exciton_energy_data[i] = 0;
-//                        exciton_count_data[i] = 0;
-//                    }
-//                }
-//            }
-//            double* exciton_displacement_data_all;
-//            double* exciton_energy_data_all;
-//            int *exciton_count_data_all;
-//            if(procid==0){
-//                exciton_displacement_data_all = (double *)malloc(sizeof(double)*nproc*array_size);
-//                exciton_energy_data_all = (double *)malloc(sizeof(double)*nproc*array_size);
-//                exciton_count_data_all = (int *)malloc(sizeof(int)*nproc*array_size);
-//            }
-//            MPI_Barrier(MPI_COMM_WORLD);
-//            MPI_Gather(exciton_displacement_data,array_size,MPI_DOUBLE,exciton_displacement_data_all,array_size,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//            MPI_Gather(exciton_energy_data,array_size,MPI_DOUBLE,exciton_energy_data_all,array_size,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//            MPI_Gather(exciton_count_data,array_size,MPI_INT,exciton_count_data_all,array_size,MPI_INT,0,MPI_COMM_WORLD);
-//            if(procid==0){
-//                ofstream displacementfile;
-//                displacementfile.open("displacementlog.txt");
-//                double exciton_displacement_avg,exciton_energy_avg;
-//                int exciton_count;
-//                for(int i=0;i<array_size;i++){
-//                    exciton_displacement_avg = 0;
-//                    exciton_energy_avg = 0;
-//                    exciton_count = 0;
-//                    for(int j=0;j<nproc;j++){
-//                        exciton_displacement_avg += exciton_displacement_data_all[j*array_size+i];
-//                        exciton_energy_avg += exciton_energy_data_all[j*array_size+i];
-//                        exciton_count += exciton_count_data_all[j*array_size+i];
-//                    }
-//                    displacementfile << time_data[i] << "," << exciton_displacement_avg/exciton_count << "," << exciton_energy_avg/exciton_count << endl;
-//                }
-//                displacementfile.close();
-//            }
-//        }
-//    }
-    // Cleanup
-    cout << procid << ": Begin Cleanup" << endl;
     if(params_sim.Enable_logging){
         logfile.close();
     }
+    cout << procid << ": Simulation finished." << endl;
+    time_end = time(NULL);
+    elapsedtime = difftime(time_end,time_start);
+    // Output simulation results for each processor
+    ss << "results" << procid << ".txt";
+    resultsfile.open(ss.str().c_str());
+    ss.str("");
+    resultsfile << "KMC_Lattice_example " << version << " Results:\n";
+    resultsfile << "Calculation time elapsed is " << (double)elapsedtime/60 << " minutes.\n";
+    resultsfile << sim.getTime() << " seconds have been simulated.\n";
+    resultsfile << sim.getN_events_executed() << " events have been executed.\n";
+    resultsfile << sim.getN_excitons_created() << " excitons have been created.\n";
+    if(params_sim.Enable_diffusion_test){
+        resultsfile << "Exciton diffusion test results:\n";
+        resultsfile << "Exciton Diffusion Length is " << sim.calculateDiffusionLength_avg() << " ± " << sim.calculateDiffusionLength_stdev() << " nm\n";
+    }
+    resultsfile << endl;
     resultsfile.close();
-    outputfile.close();
+    // Output overall analysis results from all processors
+    if(params_main.Enable_mpi){
+        vector<double> diffusion_data;
+        if(params_sim.Enable_diffusion_test){
+            diffusion_data = calculateAverageVector(sim.getDiffusionData(),procid,nproc);
+        }
+        if(procid==0){
+            ss << "analysis_summary.txt";
+            analysisfile.open(ss.str().c_str());
+            ss.str("");
+            analysisfile << "KMC_Lattice_example " << version << " Results Summary:" << endl;
+            analysisfile << nproc*sim.getN_excitons_recombined() << " total excitons tested." << endl;
+            if(params_sim.Enable_diffusion_test){
+                analysisfile << "Overall exciton diffusion test results:\n";
+                analysisfile << "Exciton diffusion length is " << vector_avg(diffusion_data) << " ± " << vector_stdev(diffusion_data) << " nm\n";
+            }
+            analysisfile.close();
+        }
+    }
     if(params_main.Enable_mpi){
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Finalize();
@@ -294,18 +225,6 @@ bool importParameters(ifstream * inputfile,Parameters_main& params_main,Paramete
     i++;
     params.Temperature = atoi(stringvars[i].c_str());
     i++;
-    //enable_recalc
-    if(stringvars[i].compare("true")==0){
-        params.Enable_recalc = true;
-    }
-    else if(stringvars[i].compare("false")==0){
-        params.Enable_recalc = false;
-    }
-    else{
-        cout << "Error setting event recalculation options" << endl;
-        return false;
-    }
-    i++;
     params.Recalc_cutoff = atoi(stringvars[i].c_str());
     i++;
     //Tests
@@ -362,6 +281,42 @@ bool importParameters(ifstream * inputfile,Parameters_main& params_main,Paramete
     params.Site_energy_urbach = atof(stringvars[i].c_str());
     i++;
     // Error checking
+    if(!params.Length>0 || !params.Width>0 || !params.Height>0){
+        cout << "Error! All lattice dimensions must be greater than zero." << endl;
+        return false;
+    }
+    if(!params.Unit_size>0){
+        cout << "Error! The lattice unit size must be greater than zero." << endl;
+        return false;
+    }
+    if(!params.Temperature>0){
+        cout << "Error! The temperature must be greater than zero." << endl;
+        return false;
+    }
+    if(params.Recalc_cutoff<params.FRET_cutoff){
+        cout << "Error! The event recalculation cutoff radius must not be less than the FRET cutoff radius." << endl;
+        return false;
+    }
+    if(!params.N_tests>0){
+        cout << "Error! The number of exciton diffusion tests must be greater than zero." << endl;
+        return false;
+    }
+    if(!params.Exciton_generation_rate>0 || !params.Exciton_lifetime>0 || !params.R_exciton_hopping>0 || !params.FRET_cutoff>0){
+        cout << "Error! All exciton properties must be greater than zero." << endl;
+        return false;
+    }
+    if(params.Enable_gaussian_dos && params.Enable_exponential_dos){
+        cout << "Error! The Gaussian and exponential disorder models cannot both be enabled." << endl;
+        return false;
+    }
+    if(params.Enable_gaussian_dos && params.Site_energy_stdev<0){
+        cout << "Error! When using the Gaussian disorder model, the standard deviation cannot be negative." << endl;
+        return false;
+    }
+    if(params.Enable_exponential_dos && params.Site_energy_urbach<0){
+        cout << "Error! When using the exponential disorder model, the Urbach energy cannot be negative." << endl;
+        return false;
+    }
     return true;
 }
 

@@ -1,9 +1,9 @@
 #ifndef EXCITON_H
 #define EXCITON_H
 
-#include "Utils.h"
-#include "Object.h"
-#include "Event.h"
+#include "KMC_Lattice/Utils.h"
+#include "KMC_Lattice/Object.h"
+#include "KMC_Lattice/Event.h"
 #include <string>
 
 using namespace std;
@@ -11,10 +11,10 @@ using namespace std;
 class Exciton : public Object{
     public:
         static const string name;
-        static const double lifetime;
-        static const double R_hop;
-        static const int FRET_cutoff;
-        Exciton();
+        static double lifetime;
+        static double R_hop;
+        static int FRET_cutoff;
+        Exciton(const double time,const int tag_num,const Coords& start_coords) : Object(time,tag_num,start_coords){}
         string getName(){return name;}
         double getLifetime(){return lifetime;}
     private:
@@ -23,54 +23,42 @@ class Exciton : public Object{
 
 class Exciton_Creation : public Event{
     public:
-        void calculateEvent(const double generation_rate){
-
-        }
-        bool executeEvent(){
-
+        static const string name;
+        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
+            // No destination coords.  Destination coords are chosen upon execution.
+            // No target object
+            setWaitTime((-1/prefactor)*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
+
 
 };
 
 class Exciton_Hop : public Event{
     public:
-        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature){
-            list<unique_ptr<Object>>::iterator it = getObjectIt();
+        static const string name;
+        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
             setDestCoords(dest_coords);
-            setWaitTime((-1/(Exciton::R_hop*intpow(1/distance,6)*exp(-E_delta/(K_b*temperature))))*log(rand01()));
-        }
-        bool executeEvent(){
-
+            // No target object
+            setWaitTime((-1/(Exciton::R_hop*intpow(1/(float)distance,6)*exp(-(float)E_delta/(K_b*temperature))))*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
+
 };
 
 class Exciton_Recombine : public Event{
     public:
-        void calculateEvent(){
-            list<unique_ptr<Object>>::iterator it = getObjectIt();
-            setDestCoords((*it)->getCoords());
+        static const string name;
+        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
+            setDestCoords(dest_coords);
             // No target object
-            setWaitTime(-1*Exciton::lifetime*log(rand01()));
-        }
-        bool executeEvent(){
-
+            setWaitTime(-1*Exciton::lifetime*log((float)rand01()));
         }
         string getName(){return name;}
     private:
-        static const string name;
 
 };
-
-// Initialize names
-const string Exciton::name = "Exciton";
-const string Exciton_Creation::name = "Exciton Creation";
-const string Exciton_Hop::name = "Exciton Hop";
-const string Exciton_Recombine::name = "Exciton Recombine";
 
 #endif // EXCITON_H
