@@ -134,12 +134,9 @@ void Exciton_sim::calculateExcitonEvents(const list<unique_ptr<Object>>::iterato
         }
     }
     // Exciton Recombination
-    Exciton_Recombine event_recombine;
-    event_recombine.setObjectIt(object_it);
-    event_recombine.calculateEvent(object_coords,0,0,0,0);
-    auto recombine_list_it = exciton_recombine_events.begin();
-    advance(recombine_list_it,std::distance(excitons.begin(),exciton_it));
-    *recombine_list_it = event_recombine;
+    auto recombine_event_it = exciton_recombine_events.begin();
+    advance(recombine_event_it,std::distance(excitons.begin(),exciton_it));
+    recombine_event_it->calculateEvent(object_coords,0,0,0,0);
     // Determine the fastest available hop event
     bool No_hops_valid = true;
     auto hop_target_it = hops_temp.end();
@@ -151,7 +148,7 @@ void Exciton_sim::calculateExcitonEvents(const list<unique_ptr<Object>>::iterato
     }
     // Compare fastest hop event with recombination event to determine fastest event for this exciton
     unique_ptr<Event> event_ptr;
-    if(!No_hops_valid && hop_target_it->getWaitTime() < event_recombine.getWaitTime()){
+    if(!No_hops_valid && hop_target_it->getWaitTime() < recombine_event_it->getWaitTime()){
         auto hop_list_it = exciton_hop_events.begin();
         advance(hop_list_it,std::distance(excitons.begin(),exciton_it));
         *hop_list_it = *hop_target_it;
@@ -159,7 +156,7 @@ void Exciton_sim::calculateExcitonEvents(const list<unique_ptr<Object>>::iterato
         setEvent(exciton_it->getEventIt(),event_ptr);
     }
     else{
-        event_ptr = unique_ptr<Event>(&(*recombine_list_it));
+        event_ptr = unique_ptr<Event>(&(*recombine_event_it));
         setEvent(exciton_it->getEventIt(),event_ptr);
     }
 }
@@ -207,6 +204,7 @@ bool Exciton_sim::executeExcitonCreation(const list<unique_ptr<Event>>::iterator
     Exciton_Hop hop_event;
     exciton_hop_events.push_back(hop_event);
     Exciton_Recombine recombine_event;
+    recombine_event.setObjectIt(object_it);
     exciton_recombine_events.push_back(recombine_event);
     // Update exciton counters
     N_excitons_created++;
