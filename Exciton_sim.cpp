@@ -111,27 +111,17 @@ void Exciton_sim::calculateExcitonEvents(const list<unique_ptr<Object>>::iterato
         for(int j=-range;j<=range;j++){
             for(int k=-range;k<=range;k++){
                 index = (i+range)*dim*dim+(j+range)*dim+(k+range);
-                if(i==0 && j==0 && k==0){
+                if(!checkMoveEventValidity(object_coords,i,j,k)){
                     hops_valid[index] = false;
                     continue;
                 }
-                if(!isXPeriodic() && (object_coords.x+i>=getLength() || object_coords.x+i<0)){
+                dest_coords = calculateDestinationCoords(object_coords,i,j,k);
+                if((*getSiteIt(dest_coords))->isOccupied()){
                     hops_valid[index] = false;
                     continue;
                 }
-                if(!isYPeriodic() && (object_coords.y+j>=getWidth() || object_coords.y+j<0)){
-                    hops_valid[index] = false;
-                    continue;
-                }
-                if(!isZPeriodic() && (object_coords.z+k>=getHeight() || object_coords.z+k<0)){
-                    hops_valid[index] = false;
-                    continue;
-                }
-                dest_coords.x = object_coords.x+i+calculateDX(object_coords.x,i);
-                dest_coords.y = object_coords.y+j+calculateDY(object_coords.y,j);
-                dest_coords.z = object_coords.z+k+calculateDZ(object_coords.z,k);
                 distance = getUnitSize()*sqrt((double)(i*i+j*j+k*k));
-                if(!((distance-0.0001)>FRET_cutoff) && !((*getSiteIt(dest_coords))->isOccupied())){
+                if(!((distance-0.0001)>FRET_cutoff)){
                     hops_temp[index].setObjectIt(object_it);
                     E_delta = (getSiteEnergy(dest_coords)-getSiteEnergy(object_coords));
                     hops_temp[index].calculateEvent(dest_coords,distance,E_delta,getTemperature(),0);
