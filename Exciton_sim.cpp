@@ -151,15 +151,17 @@ void Exciton_sim::calculateExcitonEvents(const list<unique_ptr<Object>>::iterato
     advance(recombine_list_it,std::distance(excitons.begin(),exciton_it));
     *recombine_list_it = event_recombine;
     // Determine the fastest available hop event
+    bool No_hops_valid = true;
     auto hop_target_it = hops_temp.end();
     for(auto hop_it=hops_temp.begin();hop_it!=hops_temp.end();++hop_it){
         if(hops_valid[std::distance(hops_temp.begin(),hop_it)] && (hop_target_it==hops_temp.end() || hop_it->getWaitTime()<hop_target_it->getWaitTime())){
             hop_target_it = hop_it;
+            No_hops_valid = false;
         }
     }
     // Compare fastest hop event with recombination event to determine fastest event for this exciton
     unique_ptr<Event> event_ptr;
-    if(hop_target_it->getWaitTime() < event_recombine.getWaitTime()){
+    if(!No_hops_valid && hop_target_it->getWaitTime() < event_recombine.getWaitTime()){
         auto hop_list_it = exciton_hop_events.begin();
         advance(hop_list_it,std::distance(excitons.begin(),exciton_it));
         *hop_list_it = *hop_target_it;
