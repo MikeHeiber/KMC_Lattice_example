@@ -1,3 +1,8 @@
+// Copyright (c) 2017 Michael C. Heiber
+// This source file is part of the KMC_Lattice_example project, which is subject to the MIT License.
+// For more information, see the LICENSE file that accompanies this software.
+// The KMC_Lattice_example project can be found on Github at https://github.com/MikeHeiber/KMC_Lattice_example
+
 #include "Exciton_sim.h"
 
 Exciton_sim::Exciton_sim(const Parameters_Exciton_Sim& params,const int id){
