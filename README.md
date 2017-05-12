@@ -1,12 +1,14 @@
-# KMC_Lattice_example v1.0
-This object-oriented C++ software tool provides a simple demonstration of how to use the [KMC_Lattice package](https://github.com/MikeHeiber/KMC_Lattice) to create a lattice kinetic Monte Carlo simulation.  This example shows how to extend the base classes in the KMC_Lattice package to simulate exciton creation, diffusion, and decay in an organic semiconducting material.  One could also use this as a simple random-walk simulation.
+# KMC_Lattice_example v1.1-beta
+This object-oriented C++11 software tool provides a simple demonstration of how to use the [KMC_Lattice package](https://github.com/MikeHeiber/KMC_Lattice) to create a lattice kinetic Monte Carlo simulation.  This example shows how to extend the base classes in the KMC_Lattice package to simulate exciton creation, diffusion, and decay in an organic semiconducting material.  One could also use this as a simple random-walk simulation.
 
 ### Compiling
-Compiling requires the boost library for random number generation and an MPI library for parallel processing.
+This software packages makes use of a number of feaures added in C++11, so your compiler must support the C++11 standard.
+Compiling also requires an MPI library for parallel processing.
 
-More information about these packages can be found here:
-- http://www.boost.org/
-- http://www.mpich.org/, http://www.open-mpi.org/, http://mvapich.cse.ohio-state.edu/
+Links to several common MPI packages are provided here:
+- http://www.mpich.org/
+- http://www.open-mpi.org/
+- http://mvapich.cse.ohio-state.edu/
 
 ### Usage
 KMC_Lattice_example.exe takes one required input argument, which is the filename of the input parameter file.
