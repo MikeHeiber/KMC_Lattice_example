@@ -16,54 +16,41 @@ using namespace std;
 class Exciton : public Object{
     public:
         static const string name;
-        static double lifetime;
-        static double R_hop;
-        static int FRET_cutoff;
         Exciton(const double time,const int tag_num,const Coords& start_coords) : Object(time,tag_num,start_coords){}
-        string getName(){return name;}
-        double getLifetime(){return lifetime;}
+        string getName() const{return name;}
     private:
-
 };
 
 class Exciton_Creation : public Event{
     public:
         static const string name;
-        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
-            // No destination coords.  Destination coords are chosen upon execution.
-            // No target object
-            setWaitTime((-1/prefactor)*log((float)rand01()));
-        }
-        string getName(){return name;}
+        string getName() const{return name;}
     private:
 
 
 };
 
 class Exciton_Hop : public Event{
+    using Event::calculateExecutionTime;
     public:
         static const string name;
-        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
-            setDestCoords(dest_coords);
-            // No target object
-            setWaitTime((-1/(Exciton::R_hop*intpow(1/(float)distance,6)*exp(-(float)E_delta/(K_b*temperature))))*log((float)rand01()));
+        void calculateExecutionTime(const double prefactor,const double distance,const double E_delta,const double temp,const double current_time){
+            double rate = prefactor*intpow(1/distance,6);
+            if(E_delta>0){
+                rate *= exp(-E_delta/(K_b*temp));
+            }
+            calculateExecutionTime(rate,current_time);
         }
-        string getName(){return name;}
+        string getName() const{return name;}
     private:
 
 };
 
-class Exciton_Recombine : public Event{
+class Exciton_Recombination : public Event{
     public:
         static const string name;
-        void calculateEvent(const Coords& dest_coords,const double distance,const double E_delta,const int temperature, const double prefactor){
-            setDestCoords(dest_coords);
-            // No target object
-            setWaitTime(-1*Exciton::lifetime*log((float)rand01()));
-        }
-        string getName(){return name;}
+        string getName() const{return name;}
     private:
-
 };
 
 #endif // EXCITON_H
