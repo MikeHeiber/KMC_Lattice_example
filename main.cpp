@@ -5,7 +5,7 @@
 
 #include "KMC_Lattice/Utils.h"
 #include "Exciton_sim.h"
-#include "mpi.h"
+#include <mpi.h>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -20,7 +20,7 @@ struct Parameters_main{
 bool importParameters(ifstream * inputfile,Parameters_main& params_main,Parameters_Exciton_Sim& params);
 
 int main(int argc,char *argv[]){
-    string version = "v1.0";
+    string version = "v1.1-beta";
     // Parameters
     bool End_sim = false;
     // File declaration
@@ -115,7 +115,7 @@ int main(int argc,char *argv[]){
     resultsfile << sim.getN_excitons_created() << " excitons have been created.\n";
     if(params_sim.Enable_diffusion_test){
         resultsfile << "Exciton diffusion test results:\n";
-        resultsfile << "Exciton Diffusion Length is " << sim.calculateDiffusionLength_avg() << " ± " << sim.calculateDiffusionLength_stdev() << " nm\n";
+        resultsfile << "Exciton diffusion length is " << sim.calculateDiffusionLength_avg() << " ± " << sim.calculateDiffusionLength_stdev() << " nm\n";
     }
     resultsfile << endl;
     resultsfile.close();
@@ -123,7 +123,7 @@ int main(int argc,char *argv[]){
     if(params_main.Enable_mpi){
         vector<double> diffusion_data;
         if(params_sim.Enable_diffusion_test){
-            diffusion_data = calculateAverageVector(sim.getDiffusionData(),procid,nproc);
+            diffusion_data = MPI_gatherVectors(sim.getDiffusionData(),procid,nproc);
         }
         if(procid==0){
             ss << "analysis_summary.txt";

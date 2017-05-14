@@ -35,10 +35,10 @@ struct Parameters_Exciton_Sim : Parameters_Simulation{
 
 class Site_OSC : public Site{
     public:
-        void setEnergyIt(const vector<float>::iterator it){energy_it = it;}
-        float getEnergy(){return *energy_it;}
+        void setEnergyIt(const vector<double>::iterator it){energy_it = it;}
+        double getEnergy(){return *energy_it;}
     private:
-        vector<float>::iterator energy_it;
+        vector<double>::iterator energy_it;
 };
 
 class Exciton_sim : public Simulation{
@@ -57,7 +57,7 @@ class Exciton_sim : public Simulation{
         vector<Site_OSC> sites;
         list<Exciton> excitons;
         list<Exciton_Hop> exciton_hop_events;
-        list<Exciton_Recombine> exciton_recombine_events;
+        list<Exciton_Recombination> exciton_recombination_events;
     private:
         // Additional General Parameters
         //
@@ -76,25 +76,27 @@ class Exciton_sim : public Simulation{
         double Site_energy_urbach;
         // Additional Output Files
         //
+        // Derived Paramters
+        double R_exciton_generation;
         // Additional Data Structures
-        vector<float> site_energies;
+        vector<double> site_energies;
         vector<double> diffusion_distances;
         Exciton_Creation exciton_creation_event;
-        list<unique_ptr<Event>>::iterator exciton_creation_it;
+        list<Event*>::iterator exciton_creation_it;
         // Additional Counters
         int N_excitons_created;
         int N_excitons_recombined;
         int N_excitons;
         // Additional Functions
         Coords calculateExcitonCreationCoords();
-        void calculateExcitonEvents(const list<unique_ptr<Object>>::iterator object_it);
-        void calculateExcitonListEvents(const vector<list<unique_ptr<Object>>::iterator>& exciton_it_vec);
-        void deleteExciton(const list<Exciton>::iterator exciton_it);
-        bool executeExcitonCreation(const list<unique_ptr<Event>>::iterator event_it);
-        bool executeExcitonHop(const list<unique_ptr<Event>>::iterator event_it);
-        bool executeExcitonRecombine(const list<unique_ptr<Event>>::iterator event_it);
-        list<Exciton>::iterator getExcitonIt(const unique_ptr<Object>& object_ptr);
-        float getSiteEnergy(const Coords& coords);
+        void calculateExcitonEvents(const list<Object*>::iterator object_it);
+        void calculateExcitonListEvents(const vector<list<Object*>::iterator>& exciton_it_vec);
+        void deleteExciton(const list<Object*>::iterator object_it);
+        bool executeExcitonCreation(const list<Event*>::iterator event_it);
+        bool executeExcitonHop(const list<Event*>::iterator event_it);
+        bool executeExcitonRecombination(const list<Event*>::iterator event_it);
+        list<Exciton>::iterator getExcitonIt(const Object* object_ptr);
+        double getSiteEnergy(const Coords& coords);
 };
 
 #endif // EXCITON_SIM_H
