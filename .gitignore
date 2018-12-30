@@ -1,0 +1,9 @@
+*.idb
+*.log
+*.obj
+*.pdb
+*.sln
+*.tlog
+*.vcxproj*
+.vs/*
+x64/*

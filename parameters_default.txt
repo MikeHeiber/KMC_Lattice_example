@@ -1,10 +1,12 @@
-## Parameters for KMC_Lattice_example v1.1-beta
-----------------------------------------
-## Computation Parameters
-true //Enable_mpi
-----------------------------------------
-## Required Simulation Parameters
-false //Enable_logging
+## Parameters for KMC_Lattice_example v2.0.0-rc.1
+-----------------------------------------------------------------------
+## Kinetic Monte Carlo Algorithm Parameters
+false //Enable_FRM
+true //Enable_selective_recalc
+3 //Recalc_cutoff (nm) (must not be less than any of the event cutoffs)
+false //Enable_full_recalc
+-----------------------------------------------------------------------
+## Simulation Parameters
 true //Enable_periodic_x
 true //Enable_periodic_y
 true //Enable_periodic_z
@@ -14,17 +16,17 @@ true //Enable_periodic_z
 1.0 //Unit_size (nm)
 300 //Temperature (K)
 3 //Recalc_cutoff (nm) (must not be less than the FRET_cutoff)
-----------------------------------------
+-----------------------------------------------------------------------
 ## Test Parameters
 true //Enable_diffusion_test
-10000 //N_tests
-----------------------------------------
+1000 //N_tests
+-----------------------------------------------------------------------
 ## Exciton Parameters
 1e22 //Exciton_generation_rate (cm^-3)
 500e-12 //Exciton_lifetime (s)
 1e12 //R_exciton_hopping (s^-1)
 3 //FRET_cutoff (nm)
-----------------------------------------
+-----------------------------------------------------------------------
 ## Lattice Site Parameters
 true //Enable_gaussian_dos
 0.05 //Site_energy_stdev (eV)

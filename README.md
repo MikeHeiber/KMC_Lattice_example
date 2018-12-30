@@ -1,5 +1,5 @@
-# KMC_Lattice_example v1.1-beta
-This object-oriented C++11 software tool provides a simple demonstration of how to use the [KMC_Lattice package](https://github.com/MikeHeiber/KMC_Lattice) to create a lattice kinetic Monte Carlo simulation.  This example shows how to extend the base classes in the KMC_Lattice package to simulate exciton creation, diffusion, and decay in an organic semiconducting material.  One could also use this as a simple random-walk simulation.
+# KMC_Lattice_example
+This object-oriented C++11 software tool provides a simple demonstration of how to use v2.0 of the [KMC_Lattice package](https://github.com/MikeHeiber/KMC_Lattice) to create a cubic lattice kinetic Monte Carlo simulation.  This example shows how to extend the base classes in the KMC_Lattice package to simulate exciton creation, diffusion, and decay in an organic semiconducting material.  One could also use this as a simple random-walk simulation.
 
 ### Compiling
 This software packages makes use of a number of feaures added in C++11, so your compiler must support the C++11 standard.
@@ -15,10 +15,7 @@ KMC_Lattice_example.exe takes one required input argument, which is the filename
 
 An example parameter file is provided with parameters_default.txt
 
-As an example, to create a single simulation instance on a single processor, the command is:
->    KMC_Lattice_example.exe parameters_default.txt
-
-To run in a parallel processing environment and create 10 simulations on 10 processors to gather more statistics, an example run command is:
+To create 10 simulations on 10 processors to gather statistics, an example run command is:
 >    mpiexec -n 10 KMC_Lattice_example.exe parameters_default.txt
 
 MPI execution commands can be implemented into batch scripts for running KMC_Lattice_example in a supercomputing environment.
