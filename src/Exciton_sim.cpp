@@ -15,43 +15,38 @@ namespace KMC_Lattice_example {
 		if (!params_in.checkParameters()) {
 			throw invalid_argument("Error! Cannot create Exciton_sim object because the input parameters are invalid.");
 		}
-		// Set parameters
+		// Set Parameters member variable
 		params = params_in;
 		// Set parameters of Simulation base class using the init function
+		// Can pass derived Parameters class object and the underlying Parameters_ Simulation base class will be used
 		init(params, id);
-		// Initialize counters
-		N_excitons = 0;
-		N_excitons_created = 0;
-		N_excitons_recombined = 0;
 		// Initialize lattice sites
-		Site_OSC site;
-		site.clearOccupancy();
-		sites.assign(lattice.getNumSites(), site);
-		// Initialize site energies using Utils functions
+		sites.assign(lattice.getNumSites(), Site_OSC());
+		// Create vector of site energies using Utils density of states creation functions
 		vector<double> site_energies(lattice.getNumSites());
 		if (params.Enable_gaussian_dos) {
-			createGaussianDOSVector(site_energies, 0, params.Site_energy_stdev, generator);
+			createGaussianDOSVector(site_energies, 0.0, params.Site_energy_stdev, generator);
 		}
 		else if (params.Enable_exponential_dos) {
-			createExponentialDOSVector(site_energies, 0, params.Site_energy_urbach, generator);
+			createExponentialDOSVector(site_energies, 0.0, params.Site_energy_urbach, generator);
 		}
 		// Set the site energies
-		for (int i = 0; i < lattice.getNumSites(); i++) {
-			if (params.Enable_gaussian_dos || params.Enable_exponential_dos) {
+		if (params.Enable_gaussian_dos || params.Enable_exponential_dos) {
+			for (int i = 0; i < lattice.getNumSites(); i++) {
 				sites[i].setEnergy(site_energies[i]);
 			}
 		}
-		// Set the site pointers for the lattice
+		// Set the site pointers for the Lattice object
 		vector<Site*> site_ptrs((int)sites.size());
 		for (int i = 0; i < (int)sites.size(); i++) {
 			site_ptrs[i] = &sites[i];
 		}
 		lattice.setSitePointers(site_ptrs);
-		// Initialize exciton creation event
+		// Initialize the Exciton_Creation event
 		R_exciton_generation = params.Exciton_generation_rate * lattice.getNumSites()*intpow(1e-7*lattice.getUnitSize(), 3);
-		exciton_creation_event = Exciton_Creation(this);
+		exciton_creation_event = Exciton::Creation(this);
 		exciton_creation_event.calculateExecutionTime(R_exciton_generation);
-		exciton_creation_it = addEvent(&exciton_creation_event);
+		auto exciton_creation_it = addEvent(&exciton_creation_event);
 	}
 
 	double Exciton_sim::calculateDiffusionLength_avg() {
@@ -92,43 +87,47 @@ namespace KMC_Lattice_example {
 			cout << getId() << ": Error! An empty site for exciton creation could not be found." << endl;
 			return Coords(-1, -1, -1);
 		}
+		// Randomly select one of the unoccupied sites from the indices vector
 		uniform_int_distribution<long int> distn(0, (long int)indices.size());
 		return lattice.getSiteCoords(indices[distn(generator)]);
 	}
 
-	// Each object type should have an event calculation function to that makes sure all possible event transitions are calculated
+	// Each object type should have an event calculation function that makes sure all possible event transitions are calculated
 	void Exciton_sim::calculateExcitonEvents(Exciton* exciton_ptr) {
 		// Gather information about the exciton
 		const auto exciton_it = getExcitonIt(exciton_ptr);
 		const Coords object_coords = exciton_it->getCoords();
-		// Create vector to store pointers to all possible events that the input exciton can do
+		// Create vector to store pointers to all possible events that the exciton can perform
 		vector<Event*> possible_events;
-		// Calculate all possible Exciton Hopping events and add their pointers to the possible_events vector
-		// Assess the nearby sites to determine if a hop can occur to them and calculates what rate constant is to each
-		static Exciton_Hop event_hop(this);
-		// Exciton Hop range is calculated in lattice units based on the specified hop cutoff distance in real space units
+		// Calculate all possible Exciton_Hop events and add their pointers to the possible_events vector
+		// Assess the nearby sites to determine if a hop can occur to them and calculate what is the rate constant for each event
+		static Exciton::Hop event_hop(this);
+		// The exction hop range is calculated in lattice units based on the specified hop cutoff distance in real space units
 		static const int range = (int)ceil((double)params.FRET_cutoff / lattice.getUnitSize());
 		static const int dim = (2 * range + 1);
-		// Use pre-allocated event vector so that all events in the search do not need to be created each time
-		static vector<Exciton_Hop> hops_temp(dim*dim*dim, event_hop);
+		// Use pre-allocated event vector so that all events in the search do not need to be re-created each time the function is called
+		static vector<Exciton::Hop> hops_temp(dim*dim*dim, event_hop);
 		for (int i = -range; i <= range; i++) {
 			for (int j = -range; j <= range; j++) {
 				for (int k = -range; k <= range; k++) {
 					// Use the Lattice class checkMoveValidity function to see if a move with displacement (i,j,k) is possible
+					// This checks for hard boundaries and site occupation
 					if (!lattice.checkMoveValidity(object_coords, i, j, k)) {
 						continue;
 					}
 					// Use the Lattice class calculateDestinationCoords functions to determine the destination coordinates of the proposed move
+					// This automatically accounts for hops across periodic boundaries
 					Coords dest_coords;
 					lattice.calculateDestinationCoords(object_coords, i, j, k, dest_coords);
 					// Use the Lattice class isOccupied function to check if the site at the destination coordinates is unoccupied
 					if (lattice.isOccupied(dest_coords)) {
 						continue;
 					}
-					// Calculate the real space distance of the proposed move
+					// Calculate the real space distance of the proposed move in nm
 					double distance = lattice.getUnitSize()*sqrt((double)(i*i + j * j + k * k));
 					// Save the move as a possible event only if the move distance is less than the specified cutoff distance
 					if (!((distance - 0.0001) > params.FRET_cutoff)) {
+						// Calclate the vector index for the corresponding event
 						int index = (i + range)*dim*dim + (j + range)*dim + (k + range);
 						// Must specify which object the event is associated with
 						hops_temp[index].setObjectPtr(exciton_ptr);
@@ -137,31 +136,36 @@ namespace KMC_Lattice_example {
 						// Must calculate the event rate constant
 						double E_delta = (getSiteEnergy(dest_coords) - getSiteEnergy(object_coords));
 						hops_temp[index].calculateRateConstant(params.R_exciton_hopping, distance, E_delta);
-						// Save the calculated exciton hop event as a possible event
+						// Save the calculated exciton hop event as a possible event by adding its pointer to the possible_events vector
 						possible_events.push_back(&hops_temp[index]);
 					}
 				}
 			}
 		}
-		// Account for possible Exciton Recombination event
+		// Also include the Exciton_Recombination event
+		// Find the recombination event that is paried with this exciton
 		auto recombination_event_it = exciton_recombination_events.begin();
 		advance(recombination_event_it, std::distance(excitons.begin(), exciton_it));
+		// Save the calculated exciton recombination event as a possible event by adding its pointer to the possible_events vector
 		possible_events.push_back(&*recombination_event_it);
 		// Use Simulation class determinePathway function to select which event will be next
+		// This function uses the BKL algorithm to determine which event will be selected
 		Event* event_ptr_target = determinePathway(possible_events);
-		// Copy the chosen temp event to the appropriate main event list and set the target event pointer to the corresponding event from the main list
+		// Determine what is the selected event type
 		string event_type = event_ptr_target->getEventType();
-		if (event_type.compare(Exciton_Hop::event_type) == 0) {
+		// For hop events, copy the selected temp event to the main event list
+		// Then set the target event pointer to the corresponding event from the main list
+		if (event_type.compare(Exciton::Hop::event_type) == 0) {
 			auto hop_list_it = exciton_hop_events.begin();
 			std::advance(hop_list_it, std::distance(excitons.begin(), exciton_it));
-			*hop_list_it = *static_cast<Exciton_Hop*>(event_ptr_target);
+			*hop_list_it = *static_cast<Exciton::Hop*>(event_ptr_target);
 			event_ptr_target = &(*hop_list_it);
 		}
-		// Set the chosen event for the exciton using the Simulation class setObjectEvent function
+		// Set the selected event for the exciton using the Simulation class setObjectEvent function
 		setObjectEvent(exciton_ptr, event_ptr_target);
 	}
 
-	// The function must be defined in the derived Simulation class
+	// The function must be defined in the derived simulation class
 	bool Exciton_sim::checkFinished() const {
 		if (params.Enable_diffusion_test) {
 			return (N_excitons_recombined == params.N_tests);
@@ -173,7 +177,7 @@ namespace KMC_Lattice_example {
 	void Exciton_sim::deleteExciton(Exciton* exciton_ptr) {
 		// Gather exciton information
 		auto exciton_it = getExcitonIt(exciton_ptr);
-		// remove the Object and Event pointers using Simulation class removeObject function
+		// Remove the Object and Event pointers from the Simulation base class using the removeObject function
 		removeObject(exciton_ptr);
 		// Locate corresponding recombination event
 		auto recombination_list_it = exciton_recombination_events.begin();
@@ -181,34 +185,35 @@ namespace KMC_Lattice_example {
 		// Locate corresponding hop event
 		auto hop_list_it = exciton_hop_events.begin();
 		advance(hop_list_it, std::distance(excitons.begin(), exciton_it));
-		// Delete exciton
+		// Delete exciton from the main list
 		excitons.erase(exciton_it);
-		// Delete exciton recombination event
+		// Delete exciton recombination event from the main list
 		exciton_recombination_events.erase(recombination_list_it);
-		// Delete exciton hop event
+		// Delete exciton hop event from the main list
 		exciton_hop_events.erase(hop_list_it);
 	}
 
 	// Each event type should have an associated execute function
 	bool Exciton_sim::executeExcitonCreation(const list<Event*>::const_iterator event_it) {
-		// Determine coords for the new exciton
-		const Coords coords_new = calculateExcitonCreationCoords();
-		// Create the new exciton and at it to the simulation
+		// Determine coordinates for the new exciton
+		Coords coords_new = calculateExcitonCreationCoords();
+		// Create the new exciton and add it to the simulation
 		Exciton exciton_new(getTime(), N_excitons_created + 1, coords_new);
 		excitons.push_back(exciton_new);
-		// Add new exciton to the Simulation class using its addObject function
+		// Add new exciton to the Simulation base class using its addObject function
 		addObject(&excitons.back());
-		// Add an empty hop and recombine event to the corresponding lists
-		Exciton_Hop hop_event(this);
+		// Add an empty hop event to the main event list
+		Exciton::Hop hop_event(this);
 		exciton_hop_events.push_back(hop_event);
-		Exciton_Recombination recombination_event(this);
+		// Add the recombination event to the main event list
+		Exciton::Recombination recombination_event(this);
 		// Set the recombination event associated object using the Event class setObjectPtr function
 		recombination_event.setObjectPtr(&excitons.back());
 		// Since the rate constant for all recombination events is the same and does not change,
 		// it can be set during initialization using the Event class calculateRateConstant function
 		recombination_event.calculateRateConstant(1.0 / params.Exciton_lifetime);
 		exciton_recombination_events.push_back(recombination_event);
-		// Update exciton counters
+		// Update counters
 		N_excitons_created++;
 		N_excitons++;
 		// Find all nearby excitons using the Simulation class findRecalcObjects function and calculate their next events
@@ -223,17 +228,21 @@ namespace KMC_Lattice_example {
 
 	// Each event type should have an associated execute function
 	bool Exciton_sim::executeExcitonHop(const list<Event*>::const_iterator event_it) {
+		// Check to make sure that the destination site is still unoccupied
+		// This error can occur when using the selective recalculation KMC algorithm if the recalculation cutoff radius is not set correctly
 		if (lattice.isOccupied((*event_it)->getDestCoords())) {
-			cout << "Exciton hop cannot be executed. Destination site is already occupied." << endl;
+			cout << "Error! Exciton hop cannot be executed. Destination site is already occupied." << endl;
 			return false;
 		}
 		else {
-			// Get event info
+			// Get event and object info
 			Coords coords_initial = ((*event_it)->getObjectPtr())->getCoords();
-			// Move the exciton using the Simulation class moveObject function
-			moveObject((*event_it)->getObjectPtr(), (*event_it)->getDestCoords());
+			Coords coords_dest = (*event_it)->getDestCoords();
+			Object* exciton_ptr = (*event_it)->getObjectPtr();
+			// Move the exciton using the Simulation base class moveObject function
+			moveObject(exciton_ptr, coords_dest);
 			// Find all nearby excitons using the Simulation class findRecalcObjects function and calculate their next events
-			auto neighbors = findRecalcObjects(coords_initial, (*event_it)->getDestCoords());
+			auto neighbors = findRecalcObjects(coords_initial, coords_dest);
 			for (auto& item : neighbors) {
 				calculateExcitonEvents(static_cast<Exciton*>(item));
 			}
@@ -246,7 +255,7 @@ namespace KMC_Lattice_example {
 		// Get event info
 		int exciton_tag = ((*event_it)->getObjectPtr())->getTag();
 		Coords coords_initial = ((*event_it)->getObjectPtr())->getCoords();
-		// Output final diffusion displacement distance 
+		// Output final diffusion displacement distance in nm
 		if (params.Enable_diffusion_test) {
 			diffusion_distances.push_back(lattice.getUnitSize()*((*event_it)->getObjectPtr())->calculateDisplacement());
 		}
@@ -271,13 +280,13 @@ namespace KMC_Lattice_example {
 		// Update simulation time
 		setTime((*event_it)->getExecutionTime());
 		// Determine which event type has been chosen and run the appropriate execute function
-		if (event_name.compare(Exciton_Creation::event_type) == 0) {
+		if (event_name.compare(Exciton::Creation::event_type) == 0) {
 			return executeExcitonCreation(event_it);
 		}
-		else if (event_name.compare(Exciton_Hop::event_type) == 0) {
+		else if (event_name.compare(Exciton::Hop::event_type) == 0) {
 			return executeExcitonHop(event_it);
 		}
-		else if (event_name.compare(Exciton_Recombination::event_type) == 0) {
+		else if (event_name.compare(Exciton::Recombination::event_type) == 0) {
 			return executeExcitonRecombination(event_it);
 		}
 		else {

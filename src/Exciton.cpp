@@ -9,10 +9,10 @@ using namespace std;
 
 namespace KMC_Lattice_example {
 
-	// Initialize static class members
+	// Static object_type and event_type strings must be initialized in the .cpp file.
 	const string Exciton::object_type = "Exciton";
-	const string Exciton_Creation::event_type = "Exciton Creation";
-	const string Exciton_Hop::event_type = "Exciton Hop";
-	const string Exciton_Recombination::event_type = "Exciton Recombination";
+	const string Exciton::Creation::event_type = "Exciton Creation";
+	const string Exciton::Hop::event_type = "Exciton Hop";
+	const string Exciton::Recombination::event_type = "Exciton Recombination";
 
 }

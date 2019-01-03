@@ -12,8 +12,6 @@ namespace KMC_Lattice_example {
 
 	Parameters::Parameters() {}
 
-	Parameters::~Parameters() {}
-
 	bool Parameters::checkParameters() const {
 		if (!(Temperature > 0)) {
 			cout << "Error! The temperature must be greater than zero." << endl;
@@ -50,10 +48,13 @@ namespace KMC_Lattice_example {
 		return true;
 	}
 
+	// This parameter import function is designed to parse parameter files based on the format
+	// that is present in the parameters_default.txt file included with this package
 	bool Parameters::importParameters(ifstream& inputfile) {
-		string line;
+		// Read all lines of the file into a string vector
 		vector<string> stringvars;
 		while (inputfile.good()) {
+			string line;
 			getline(inputfile, line);
 			if ((line.substr(0, 2)).compare("--") != 0 && (line.substr(0, 2)).compare("##") != 0) {
 				auto pos = line.find("/", 0);
@@ -61,6 +62,8 @@ namespace KMC_Lattice_example {
 				stringvars.push_back(var);
 			}
 		}
+		// Parse each line of the parameter file
+		// Boolean "true" or "false" values can be parsed using the Utils str2bool function.
 		int i = 0;
 		// KMC Algorithm Parameters
 		try {
