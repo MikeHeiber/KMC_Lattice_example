@@ -14,7 +14,7 @@ For a more complex and complete example using the KMC_Lattice library to produce
 
 If you have any questions about the example presented here, please post them in the [Issues](https://github.com/MikeHeiber/KMC_Lattice_example/issues) section. 
 
-#### Building the Executable
+### Building the Executable
 
 This software tool uses [Message Passing Interface (MPI)](https://computing.llnl.gov/tutorials/mpi/) to utilize parallel computing power. 
 As a result, using this tool requires that an MPI library is pre-installed on your system, and the final executable must be built on your specific system. 
