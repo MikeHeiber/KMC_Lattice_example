@@ -43,6 +43,7 @@ and finally build the executable with the default makefile.
 
 In the default makefile, compilation flags have been set for the GCC and PGI compilers. 
 If you are using another compiler, you will need to edit the makefile and define your own compiler options.
+On Windows, one can configure Microsoft Visual Studio with Microsoft MPI to also build and run this software, by following [these instructions](https://blogs.technet.microsoft.com/windowshpc/2015/02/02/how-to-compile-and-run-a-simple-ms-mpi-program/).
 
 Please report any build errors in the [Issues](https://github.com/MikeHeiber/KMC_Lattice_example/issues) section. 
 
