@@ -53,6 +53,7 @@ KMC_Lattice_example.exe takes one required input argument, which is the filename
 An example parameter file is provided with parameters_default.txt
 
 To create 10 simulations on 10 processors to gather statistics, an example run command is:
+
 ```mpiexec -n 10 KMC_Lattice_example.exe parameters_default.txt```
 
 MPI execution commands can be implemented into batch scripts for running KMC_Lattice_example in a supercomputing environment.
