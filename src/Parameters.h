@@ -53,7 +53,7 @@ namespace KMC_Lattice_example {
 		double Exciton_generation_rate = 0.0; // (cm^-3 s^-1)
 		// This parameter defines the average lifetime of the excitons
 		double Exciton_lifetime = 0.0; // (s)
-		// This parameter defines the exciton hop rate prefactor (attempt-to-hop frquency)
+		// This parameter defines the exciton hop rate prefactor (attempt-to-hop frequency)
 		double R_exciton_hopping = 0.0; // (s^-1)
 		// This parameter defines the exciton hop range cutoff
 		int FRET_cutoff = 0; // (nm)

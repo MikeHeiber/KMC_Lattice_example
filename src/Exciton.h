@@ -22,7 +22,7 @@ namespace KMC_Lattice_example {
 		// Derived object constructors must call the base class constructor as well.
 		Exciton(const double time, const int tag_num, const KMC_Lattice::Coords& start_coords) : Object(time, tag_num, start_coords) {}
 		
-		// Derived object classes must define the getObjectType function to retrive the static object type string.
+		// Derived object classes must define the getObjectType function to retrieve the static object type string.
 		std::string getObjectType() const { return object_type; }
 
 		// -----------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ namespace KMC_Lattice_example {
 		// that the derived object can perform within the derived object class with public scope.
 		// -----------------------------------------------------------------------------------------------
 
-		// This derived event class represents an an exciton creation event
+		// This derived event class represents an exciton creation event
 		class Creation : public KMC_Lattice::Event {
 		public:
 			// Derived event classes must have a static constant string variable that will be set to a 
@@ -45,13 +45,13 @@ namespace KMC_Lattice_example {
 			// Derived event constructors must call the base class constructor.
 			Creation(KMC_Lattice::Simulation* sim_ptr) : KMC_Lattice::Event(sim_ptr) {}
 
-			// Derived event classes must define the getEventType function to retrive the static event type string.
+			// Derived event classes must define the getEventType function to retrieve the static event type string.
 			std::string getEventType() const { return event_type; }
 		private:
 
 		};
 
-		// This derived event class represnts an exciton hop (move) event
+		// This derived event class represents an exciton hop (move) event
 		class Hop : public KMC_Lattice::Event {
 		public:
 			// Derived event classes must have a static constant string variable that will be set to a 
@@ -72,7 +72,7 @@ namespace KMC_Lattice_example {
 				}
 			}
 
-			// Derived event classes must define the getEventType function to retrive the static event type string.
+			// Derived event classes must define the getEventType function to retrieve the static event type string.
 			std::string getEventType() const { return event_type; }
 		private:
 
@@ -89,7 +89,7 @@ namespace KMC_Lattice_example {
 			// Derived event constructors must call the base class constructor.
 			Recombination(KMC_Lattice::Simulation* simulation_ptr) : Event(simulation_ptr) {}
 
-			// Derived event classes must define the getEventType function to retrive the static event type string.
+			// Derived event classes must define the getEventType function to retrieve the static event type string.
 			std::string getEventType() const { return event_type; }
 
 		private:

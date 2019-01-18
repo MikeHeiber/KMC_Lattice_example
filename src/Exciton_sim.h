@@ -26,7 +26,7 @@ namespace KMC_Lattice_example {
 		double energy = 0.0;
 	};
 
-	// Derived Simulation class for simulating exciton creation, diffusio, and recombination
+	// Derived Simulation class for simulating exciton creation, diffusion, and recombination
 	class Exciton_sim : public KMC_Lattice::Simulation {
 	public:
 		// Constructor that creates an Exciton_sim object with the specified input parameters
@@ -82,7 +82,7 @@ namespace KMC_Lattice_example {
 
 		// -----------------------------------------------------------------------------------------------
 		// Event storage - One needs to store each type of event in the simulation.
-		// Pointers to these events will be used bt the Simulation base class.
+		// Pointers to these events will be used by the Simulation base class.
 		// Use list for more rapid adding and removing of events during the simulation.
 		// -----------------------------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ namespace KMC_Lattice_example {
 		// Derived parameters should normally be initialized within the simulation class constructor
 		// -----------------------------------------------------------------------------------------------
 
-		// Defines the rate contant for exciton generation, which is calculated based on the input params
+		// Defines the rate constant for exciton generation, which is calculated based on the input params
 		double R_exciton_generation;
 
 		// -----------------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ namespace KMC_Lattice_example {
 		// data needed by any of the simulation tests.
 		// -----------------------------------------------------------------------------------------------
 
-		// In this simulation, there is only one test, called the exiton diffusion test
+		// In this simulation, there is only one test, called the exciton diffusion test
 		// To generate diffusion length results, here we use a simple vector for storing the displacement
 		// distance of each Exciton once it recombines
 		std::vector<double> diffusion_distances;
@@ -131,7 +131,7 @@ namespace KMC_Lattice_example {
 		// Keep track of how many Exciton objects have been created in the simulation so far.
 		int N_excitons_created = 0;
 
-		// Keep track of how many Exciton_Recombination events have occurd so far.
+		// Keep track of how many Exciton_Recombination events have occurred so far.
 		int N_excitons_recombined = 0;
 
 		// -----------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ namespace KMC_Lattice_example {
 
 		// -----------------------------------------------------------------------------------------------
 		// Execute event functions - One should define "execute event" functions for each type of event
-		// for each type of Object in the simulaiton.
+		// for each type of Object in the simulation.
 		// -----------------------------------------------------------------------------------------------
 
 		// Execute the exciton creation event and return true if the event is successful or false an 
@@ -168,7 +168,7 @@ namespace KMC_Lattice_example {
 		// This function deletes an Exciton from the simulation
 		// The code in this function could be rolled into the executeExcitonRecombination if desired here.
 		// But in more complex simulations multiple event may cause excitons to be removed from the simulation,
-		// and so resuable delete functions are good to have.
+		// and so reusable delete functions are good to have.
 		void deleteExciton(Exciton* exciton_ptr);
 
 		// -----------------------------------------------------------------------------------------------
@@ -180,11 +180,11 @@ namespace KMC_Lattice_example {
 		// The code in this function could be rolled into the executeExcitonCreation function if desired.
 		KMC_Lattice::Coords calculateExcitonCreationCoords();
 
-		// This utility function provide an easy resuseable conversion from Exiton pointer to Exciton 
-		// list iterator for an alteranteve way to access the Exciton object
+		// This utility function provide an easy reusable conversion from Exciton pointer to Exciton 
+		// list iterator for an alternative way to access the Exciton object
 		std::list<Exciton>::iterator getExcitonIt(const Exciton* exciton_ptr);
 
-		// This utiliy function provides an easier reuseable way to get the energy of the site at the
+		// This utility function provides an easier reusable way to get the energy of the site at the
 		// specified coordinates.
 		double getSiteEnergy(const KMC_Lattice::Coords& coords) const;
 	};
